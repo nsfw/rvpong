@@ -8,6 +8,8 @@ color bg;
 color fg;
 color ball;
 
+BMFont test;
+
 void setup(){
     size(w*quanta, h*quanta,P2D);
     state = "START";

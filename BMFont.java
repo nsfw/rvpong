@@ -28,8 +28,8 @@ class BMFont {
         GlyphHeight = _GlyphHeight;
         FixedWidth = _FixedWidth;
         // data arrays
-        // GlyphWidth = _GlyphWidth;
-        // GlyphBitmaps = _GlyphBitmaps;
+        GlyphWidth = _GlyphWidth;
+        GlyphBitmaps = _GlyphBitmaps;
     };
 
 };
