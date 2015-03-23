@@ -2,7 +2,12 @@ int quanta = 10;   // everything displays in chunks this big
 int w=80;
 int h=10;
 
+int WIN=4;
+int WIN_FRAMES=30*3;
+int SCORE_FRAMES=15;
+
 String state;
+int holdFrames;
 
 color fg;
 color initFg;
@@ -20,6 +25,8 @@ void setup(){
     frameRate(30);
 
     state = "START";
+    holdFrames = 0;
+
     colorMode(HSB, 1.0);        // specify HSB in fractions
 
     white = color(1.0, 1.0, 1.0);  // white
@@ -142,7 +149,7 @@ void paddleStrike(){
 
     if(abs(dist)<=paddleHeight){
         // let's call it a hit!
-        println("bounce");
+        // println("bounce");
         rally++;
 
         // flip direction
@@ -183,12 +190,27 @@ void update(){
         setColor(fg);
         int ab = (frameCount/60) % 2;
         String msg = (ab == 0) ? "   PLAY PONG" : " MAKE A FIGHT!" ;
-        typeAt(0+ab*(frameCount>>1)&0x1,0, msg);
+        textAt(0+ab*(frameCount>>1)&0x1,0, msg);
         rowBackground(1, fg);
         setColor(tmp);
-        typeAt(2,5," RVIP LOUNGE");
-        // state = "POINT";
-    } else if (state == "POINT") {
+        textAt(2,5," RVIP LOUNGE");
+    } else if (state == "SCORE") {
+        // check for WIN, otherwise display SCORE and advance to
+        if(scoreLeft>=WIN || scoreRight>=WIN){
+            state = "WIN";
+            holdFrames=WIN_FRAMES;
+        } else {
+            if(holdFrames == 0)
+                state = "START_PLAY";
+            else
+                holdFrames--;
+        }
+    } else if (state == "WIN") {
+        if(holdFrames == 0)
+            state = "START";
+        else
+            holdFrames--;
+    } else if (state == "START_PLAY") {
         // check for End Of Game, otherwise reset balls and padles
         // paddleLeft = 4;
         // paddleRight = 4;
@@ -207,8 +229,8 @@ void update(){
         updateBall();
         // did we exit either side?
         if(ballX < 0 || ballX > w){
-            state = "POINT";
-            println(state);
+            state = "SCORE";
+            holdFrames = SCORE_FRAMES;     // frames to display score
             if(ballX<0){
                 scoreRight++;
             } else {
@@ -230,13 +252,25 @@ void draw(){
 
     setColor(fg);
 
-    if(state != "START"){
+    if(state == "PLAY"){
         // draw paddles
         drawPaddle(paddleLeft, paddleLeftCol);
         drawPaddle(paddleRight, paddleRightCol);
 
         // and ball
         drawBall();
+    }
+
+    if(state == "SCORE"){
+        textAt(0,0,"     SCORE");
+        String msg = ""+scoreLeft;
+        textAt(5,5,msg);
+        msg = ""+scoreRight;
+        textAt(65,5,msg);
+    }
+
+    if(state == "WIN"){
+        textAt(0,0,"WIN WIN WIN WIN");
     }
 
     if(debugMode){
@@ -258,13 +292,20 @@ void keyPressed(){
     if(key == ']' && paddleRight<(h-paddleHeight)){
         paddleRight += 1;
     }
+
+    if(key == 'q' && paddleLeft>0){
+        paddleLeft += -1;
+    }
+    if(key == 'w' && paddleLeft<(h-paddleHeight)){
+        paddleLeft += 1;
+    }
     if(key == 'd'){
         debugMode = !debugMode;
         println("DebugMode = " + debugMode);
     }
     if(key == ' '){
         debugStep = true;
-        if(state == "START") state = "POINT";
+        if(state == "START") state = "START_PLAY";
     }
     if(key == '`'){
         state = "START";
@@ -307,7 +348,7 @@ int charAt(int x, int y, int c){
     return cw;
 }
 
-void typeAt(int x, int y, String msg){
+void textAt(int x, int y, String msg){
     // for now just print an A
     int cx = x;
     for (int i = 0; i < msg.length(); i++){
