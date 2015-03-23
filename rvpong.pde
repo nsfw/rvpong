@@ -1,9 +1,11 @@
+import processing.video.*;
+
 int quanta = 10;   // everything displays in chunks this big
 int w=80;
 int h=10;
 
 int WIN=4;
-int WIN_FRAMES=30*3;
+int WIN_FRAMES=30*5;
 int SCORE_FRAMES=15;
 
 String state;
@@ -19,13 +21,17 @@ color white;
 color black;
 
 Font5x5 font;
+Movie explode;
 
 void setup(){
-    size(w*quanta, h*quanta,P2D);
+    size(w*quanta, h*quanta);
     frameRate(30);
 
     state = "START";
     holdFrames = 0;
+
+    // explode = new Movie(this, "media/explosion1.mp4");
+    explode = new Movie(this, "media/explosion2.mp4");
 
     colorMode(HSB, 1.0);        // specify HSB in fractions
 
@@ -91,6 +97,10 @@ color highContrast(color c){
 void rowBackground(int r, color c){
     setColor(c);
     rect(0, r*5*quanta, w*quanta, (r+1)*5*quanta-1);
+}
+
+void movieEvent(Movie m) {
+  m.read();
 }
 
 void drawPaddle(int top, int col){
@@ -190,7 +200,7 @@ void update(){
         setColor(fg);
         int ab = (frameCount/60) % 2;
         String msg = (ab == 0) ? "   PLAY PONG" : " MAKE A FIGHT!" ;
-        textAt(0+ab*(frameCount>>1)&0x1,0, msg);
+        jiggleTextAt(0, 0, ab, 2, msg);    // don't jiggle PONG
         rowBackground(1, fg);
         setColor(tmp);
         textAt(2,5," RVIP LOUNGE");
@@ -270,7 +280,25 @@ void draw(){
     }
 
     if(state == "WIN"){
-        textAt(0,0,"WIN WIN WIN WIN");
+        if(holdFrames == WIN_FRAMES){
+            holdFrames--;   // fire once
+            explode.jump(0);
+            explode.play();
+        }
+
+        int movieCol = scoreLeft >= WIN ? 40 : 0;
+        int winCol = scoreLeft >= WIN ? 0 : 40;
+
+        // render movie
+        image(explode, movieCol*quanta, 0, width/2, height);
+
+        // WIN JIGGLE DANCE
+        jiggleTextAt(winCol,0,1,4,"WINNER");
+        jiggleTextAt(winCol+2,5,1,4,"WINNER");
+
+        // SO LOSE :(
+        textAt(movieCol, 0, "   SO");
+        textAt(movieCol, 5, "  LOSE");
     }
 
     if(debugMode){
@@ -312,6 +340,11 @@ void keyPressed(){
     }
     if(key == 'h'){
         hueAnim = !hueAnim;
+    }
+    if(key == 'x'){
+        // test WIN effect
+        state = "WIN";
+        holdFrames = WIN_FRAMES;
     }
 }
 
@@ -355,4 +388,9 @@ void textAt(int x, int y, String msg){
         char c = msg.charAt(i);
         x = x + charAt(x, y, (int) c);
     }
+}
+
+void jiggleTextAt(int x, int y, int amt, int rate, String msg){
+    // for that awesome Taco Truck Feeling!
+    textAt(x+amt*((int)(frameCount/rate)&0x1),y, msg);
 }
