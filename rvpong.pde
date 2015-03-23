@@ -1,23 +1,36 @@
-
 int quanta = 10;   // everything displays in chunks this big
 int w=80;
 int h=10;
 
 String state;
-color bg;
+
 color fg;
+color initFg;
+color bg;
+color initBg;
 color ball;
 
-BMFont test;
+color white;
+color black;
+
+Font5x5 font;
 
 void setup(){
     size(w*quanta, h*quanta,P2D);
+    frameRate(30);
+
     state = "START";
     colorMode(HSB, 1.0);        // specify HSB in fractions
 
-    fg = color(1.0, 0.0, 1.0);  // white
-    bg = color(0.5, 0.0, 0.0);  // black
+    white = color(1.0, 1.0, 1.0);  // white
+    black = color(1.0, 1.0, 0.0);  // black
+    initFg = white;
+    initBg = black;
+    fg = color(1.0, 1.0, 1.0);  // bright & saturated
+    bg = highContrast(fg);
     ball = fg;
+
+    font = new Font5x5();
 }
 
 // uses the current draw state
@@ -58,6 +71,19 @@ boolean debugStep=false;
 void setColor(color c){
     stroke(c);
     fill(c);
+}
+
+color highContrast(color c){
+    if(c == white) return black;
+
+    // otherwise, we'll just find some nice hue value
+    color r = color(((hue(c) + 0.6180339) % 1.0), saturation(c), brightness(c));
+    return r;
+}
+
+void rowBackground(int r, color c){
+    setColor(c);
+    rect(0, r*5*quanta, w*quanta, (r+1)*5*quanta-1);
 }
 
 void drawPaddle(int top, int col){
@@ -129,7 +155,20 @@ void paddleStrike(){
     }
 }
 
+boolean hueAnim = true;
+
 void update(){
+
+    if(hueAnim){
+        fg = color( (hue(fg)+0.005) % 1.0, saturation(fg), brightness(fg));
+        bg = highContrast(fg);
+        ball = fg;
+    } else {
+        fg = initFg;
+        bg = initBg;
+        ball = fg;
+    }
+
     if(state == "START"){
         // draw top of game stuff
         scoreLeft=0;
@@ -139,7 +178,16 @@ void update(){
         rally=0;
         // wait for start here...
         // "make a fight - 3 2 1"
-        state = "POINT";
+        color tmp = highContrast(fg);
+        rowBackground(0, tmp);
+        setColor(fg);
+        int ab = (frameCount/60) % 2;
+        String msg = (ab == 0) ? "   PLAY PONG" : " MAKE A FIGHT!" ;
+        typeAt(0+ab*(frameCount>>1)&0x1,0, msg);
+        rowBackground(1, fg);
+        setColor(tmp);
+        typeAt(2,5," RVIP LOUNGE");
+        // state = "POINT";
     } else if (state == "POINT") {
         // check for End Of Game, otherwise reset balls and padles
         // paddleLeft = 4;
@@ -182,12 +230,14 @@ void draw(){
 
     setColor(fg);
 
-    // draw paddles
-    drawPaddle(paddleLeft, paddleLeftCol);
-    drawPaddle(paddleRight, paddleRightCol);
+    if(state != "START"){
+        // draw paddles
+        drawPaddle(paddleLeft, paddleLeftCol);
+        drawPaddle(paddleRight, paddleRightCol);
 
-    // and ball
-    drawBall();
+        // and ball
+        drawBall();
+    }
 
     if(debugMode){
         if(debugStep){
@@ -214,5 +264,54 @@ void keyPressed(){
     }
     if(key == ' '){
         debugStep = true;
+        if(state == "START") state = "POINT";
+    }
+    if(key == '`'){
+        state = "START";
+    }
+    if(key == 'h'){
+        hueAnim = !hueAnim;
+    }
+}
+
+// Note: should look at moving this code into BMFont and passing
+// in a 'drawerPixel' function
+
+int charAt(int x, int y, int c){
+    // get bitmap data for this character
+    int cw = font.getWidth(c);      // in pixels
+    int ch = font.GlyphHeight;
+    int bw = font.GlyphBytesWidth;
+    int index = font.getIndex(c);   // index into bitmap
+
+    for (int cy=0; cy<ch; cy++){
+        for(int cx=0; cx<cw; cx++){
+            // NOTE: currently only supports single byte wide fonts!
+            // println("index="+index);
+            // println("bw="+bw);
+            // println("bitmap len="+font.bitmap.length);
+
+            int row = font.bitmap[index+(cy*bw)];
+            // int row=0xc0;
+
+            // bitmap is packed to the MSBs
+            if(((1<<(7-cx)) & row) != 0){
+                drawPixelAt(x+cx, y+cy);
+                // print("x");
+            } else {
+                // print(" ");
+            }
+        }
+        // println("");
+    }
+    return cw;
+}
+
+void typeAt(int x, int y, String msg){
+    // for now just print an A
+    int cx = x;
+    for (int i = 0; i < msg.length(); i++){
+        char c = msg.charAt(i);
+        x = x + charAt(x, y, (int) c);
     }
 }

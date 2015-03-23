@@ -7,13 +7,13 @@
 //
 
 class BMFont {
-    int GlyphCount;
-    int FirstAsciiCode;
-    int GlyphBytesWidth;
-    int GlyphHeight;
-    int FixedWidth;
+    public int GlyphCount;
+    public int FirstAsciiCode;
+    public int GlyphBytesWidth;
+    public int GlyphHeight;
+    public int FixedWidth;
     int[] GlyphWidth;
-    int[] GlyphBitmaps;
+    int[] bitmap;
 
     public BMFont(int _GlyphCount,
                   int _FirstAsciiCode,
@@ -29,7 +29,20 @@ class BMFont {
         FixedWidth = _FixedWidth;
         // data arrays
         GlyphWidth = _GlyphWidth;
-        GlyphBitmaps = _GlyphBitmaps;
+        bitmap = _GlyphBitmaps;
     };
+
+    int getWidth(int c){
+        if(FixedWidth != 0){
+            return FixedWidth;
+        }
+        if(c<FirstAsciiCode) return 0;
+        return GlyphWidth[c-FirstAsciiCode];
+    }
+
+    int getIndex(int c){
+        if(c<FirstAsciiCode) return 0;
+        return (c-FirstAsciiCode)*GlyphBytesWidth*GlyphHeight;
+    }
 
 };
