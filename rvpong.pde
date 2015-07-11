@@ -1,4 +1,5 @@
 import processing.video.*;
+import point2line.*;
 
 int quanta = 10;   // everything displays in chunks this big
 int w=80;
@@ -141,19 +142,47 @@ void updateBall(){
 }
 
 void paddleStrike(){
+
+    // does the new position of the ball intersect one of the paddles?
+
+    Vect2[] ballLine = new Vect2[2];
+    ballLine[0] = new Vect2(ballX, ballY);
+    ballLine[1] = new Vect2(ballX+ballVX, ballY+ballVY);
+
+    Vect2[] paddleLeftLine = new Vect2[2];
+    paddleLeftLine[0] = new Vect2(paddleLeftCol, paddleLeft);
+    paddleLeftLine[1] = new Vect2(paddleLeftCol, paddleLeft + paddleHeight);
+
+    Vect2[] paddleRightLine = new Vect2[2];
+    paddleRightLine[0] = new Vect2(paddleRightCol, paddleRight);
+    paddleRightLine[1] = new Vect2(paddleRightCol, paddleRight + paddleHeight);
+
+    Vect2 intersectionPointLeft = Space2.lineSegmentIntersection(
+        ballLine[0],
+        ballLine[1],
+        paddleLeftLine[0],
+        paddleLeftLine[1]);
+
+    Vect2 intersectionPointRight = Space2.lineSegmentIntersection(
+        ballLine[0],
+        ballLine[1],
+        paddleRightLine[0],
+        paddleRightLine[1]);
+
     int top = h;
     int dir = 0;
 
-    if(ballX < paddleLeftCol+0.5){
+    if(intersectionPointLeft != null){
         top = paddleLeft;
         dir = 1;
-    } else if (ballX > paddleRightCol){
+    } else if (intersectionPointRight != null){
         top = paddleRight;
         dir = -1;
     } else {
         return;
     }
 
+    // this stuff could use the vectors above, but nawwwww....
     float center = top + (paddleHeight/2);
     float dist = ballY - center;     // <0 is top of paddle, >0 is bottom
 
@@ -163,14 +192,46 @@ void paddleStrike(){
         rally++;
 
         // flip direction
-        ballVX = (-ballVX);
+        ballVX = (-ballVX)*(1+rally/10.0);
         ballX += ballVX;
         ballX += ballVX;
 
         float norm = dist/(paddleHeight/2);
-        ballVY = norm/5;
+        ballVY = -norm/5;
     }
 }
+
+// void paddleStrike(){
+//     int top = h;
+//     int dir = 0;
+
+//     if(ballX < paddleLeftCol+0.5){
+//         top = paddleLeft;
+//         dir = 1;
+//     } else if (ballX > paddleRightCol){
+//         top = paddleRight;
+//         dir = -1;
+//     } else {
+//         return;
+//     }
+
+//     float center = top + (paddleHeight/2);
+//     float dist = ballY - center;     // <0 is top of paddle, >0 is bottom
+
+//     if(abs(dist)<=paddleHeight){
+//         // let's call it a hit!
+//         // println("bounce");
+//         rally++;
+
+//         // flip direction
+//         ballVX = (-ballVX);
+//         ballX += ballVX;
+//         ballX += ballVX;
+
+//         float norm = dist/(paddleHeight/2);
+//         ballVY = norm/5;
+//     }
+// }
 
 boolean hueAnim = true;
 
