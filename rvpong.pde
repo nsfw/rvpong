@@ -199,7 +199,8 @@ void update(){
         rowBackground(0, tmp);
         setColor(fg);
         int ab = (frameCount/60) % 2;
-        String msg = (ab == 0) ? "   PLAY PONG" : " MAKE A FIGHT!" ;
+        String msg = (ab == 0) ? " PLAY A PONG" : " MAKE A FIGHT!" ;
+//        String msg = " YXYY   YXYY " ;
         jiggleTextAt(0, 0, ab, 2, msg);    // don't jiggle PONG
         rowBackground(1, fg);
         setColor(tmp);
@@ -314,24 +315,24 @@ void draw(){
 
 void keyPressed(){
         // right paddle
-    if(key == '[' && paddleRight>0){
+    if(key == 'i' && paddleRight>0){
         paddleRight += -1;
     }
-    if(key == ']' && paddleRight<(h-paddleHeight)){
+    if(key == 'k' && paddleRight<(h-paddleHeight)){
         paddleRight += 1;
     }
 
-    if(key == 'q' && paddleLeft>0){
+    if(key == 'w' && paddleLeft>0){
         paddleLeft += -1;
     }
-    if(key == 'w' && paddleLeft<(h-paddleHeight)){
+    if(key == 's' && paddleLeft<(h-paddleHeight)){
         paddleLeft += 1;
     }
     if(key == 'd'){
         debugMode = !debugMode;
         println("DebugMode = " + debugMode);
     }
-    if(key == ' '){
+    if(key == ' ' || key == 'q' || key == 'p'){
         debugStep = true;
         if(state == "START") state = "START_PLAY";
     }
