@@ -30,9 +30,9 @@ void setup(){
 
     state = "START";
     holdFrames = 0;
-
+    println(dataPath(""));
     // explode = new Movie(this, "media/explosion1.mp4");
-    explode = new Movie(this, "media/explosion2.mp4");
+    explode = new Movie(this, "../media/explosion2.mp4");
 
     colorMode(HSB, 1.0);        // specify HSB in fractions
 
